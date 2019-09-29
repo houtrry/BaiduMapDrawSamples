@@ -83,6 +83,7 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
 
             @Override
             public void onMapStatusChangeFinish(MapStatus mapStatus) {
+//                map.getProjection().toScreenLocation()
             }
         });
     }
@@ -111,6 +112,7 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
         mMapFloatingLayerView.setTranslationY(dy);
 //        mMapFloatingLayerView.setLayoutParams(marginLayoutParams);
 
+//        setPadding((int)dx, (int) dy, 0, 0);
         return true;
     }
 }

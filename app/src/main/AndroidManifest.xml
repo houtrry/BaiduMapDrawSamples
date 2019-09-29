@@ -49,7 +49,7 @@
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="rsMMzNQhWw0AO5pvb4BdZHndgH0pPU8v" />
+            android:value="rsMMzNQhWw0AO5pvb32dZHndgH0pPU8v" />
         <meta-data
             android:name="android.max_aspect"
             android:value="2.1" />
