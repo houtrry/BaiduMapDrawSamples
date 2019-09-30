@@ -4,7 +4,6 @@ package com.houtrry.baidumapdrawsamples;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.util.Log;
 
 import com.baidu.mapapi.model.LatLng;
 
@@ -21,8 +20,8 @@ public class CirclePointView {
     private LatLng latLng;
     private int radius;
     private int stokeWidth;
-    private int stokeColor;
-    private int solidColor;
+    private Integer stokeColor = null;
+    private Integer solidColor = null;
 
     private float fixX = 0;
     private float fixY = 0;
@@ -30,7 +29,7 @@ public class CirclePointView {
     private float touchRatio;
 
     private int centerRadius = 0;
-    private int centerColor;
+    private Integer centerColor = null;
 
     public PointF getPoint() {
         return point;
@@ -120,22 +119,21 @@ public class CirclePointView {
         this.centerColor = centerColor;
     }
 
-    private float centerX = 0;
-    private float centerY = 0;
-
     public void draw(Canvas canvas, Paint paint) {
         if (canvas == null) {
             return;
         }
-        centerX = point.x + fixX;
-        centerY = point.y + fixY;
-        paint.setColor(stokeColor);
-        canvas.drawCircle(centerX, centerY, radius, paint);
-        paint.setColor(solidColor);
-        canvas.drawCircle(centerX, centerY, radius - stokeWidth, paint);
+        if (stokeColor != null) {
+            paint.setColor(stokeColor);
+            canvas.drawCircle(point.x, point.y, radius, paint);
+        }
+        if (solidColor != null) {
+            paint.setColor(solidColor);
+            canvas.drawCircle(point.x, point.y, radius - stokeWidth, paint);
+        }
         if (centerRadius > 0) {
             paint.setColor(centerColor);
-            canvas.drawCircle(centerX, centerY, centerRadius, paint);
+            canvas.drawCircle(point.x, point.y, centerRadius, paint);
         }
     }
 
@@ -157,11 +155,7 @@ public class CirclePointView {
     }
 
     public void fixPosition(float dx, float dy) {
-        Log.d(TAG, "===>>>fixPosition: fixX: " + fixX + ", fixY: " + fixY + ", dx: " + dx + ", dy:" + dy);
-        fixX = dx;
-        fixY = dy;
-        centerX = point.x + fixX;
-        centerY = point.y + fixY;
-        Log.d(TAG, "===>>>fixPosition: fixX: " + fixX + ", fixY: " + fixY+", centerX: "+centerX+", centerY: "+centerY);
+        point.x += dx;
+        point.y += dy;
     }
 }

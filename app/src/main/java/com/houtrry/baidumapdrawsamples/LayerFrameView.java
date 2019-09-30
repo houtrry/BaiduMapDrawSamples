@@ -108,11 +108,16 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
 //        MarginLayoutParams marginLayoutParams = (MarginLayoutParams) mMapFloatingLayerView.getLayoutParams();
 //        marginLayoutParams.leftMargin = (int) dx;
 //        marginLayoutParams.topMargin = (int) dy;
-        mMapFloatingLayerView.setTranslationX(dx);
-        mMapFloatingLayerView.setTranslationY(dy);
+//        mMapFloatingLayerView.setTranslationX(dx);
+//        mMapFloatingLayerView.setTranslationY(dy);
 //        mMapFloatingLayerView.setLayoutParams(marginLayoutParams);
 
 //        setPadding((int)dx, (int) dy, 0, 0);
-        return true;
+        return false;
+    }
+
+    @Override
+    public void onPointClick(CirclePointView circlePointView) {
+
     }
 }
