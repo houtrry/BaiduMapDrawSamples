@@ -23,6 +23,7 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
 
     private static final String TAG = "LayerFrameView";
     private MapFloatingLayerView mMapFloatingLayerView;
+    private BaiduMap mBaiduMap;
 
     public LayerFrameView(Context context) {
         this(context, null);
@@ -39,10 +40,12 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (mMapFloatingLayerView != null ) {
-            mMapFloatingLayerView.handleTouchEvent(ev);
+        showLog("===>>>dispatchTouchEvent: "+ev);
+        boolean result = false;
+        if (mMapFloatingLayerView != null) {
+            result = mMapFloatingLayerView.handleTouchEvent(ev);
         }
-        return super.dispatchTouchEvent(ev);
+        return result || super.dispatchTouchEvent(ev);
     }
 
     private void init(Context context, AttributeSet attrs) {
@@ -53,11 +56,11 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
     private void initMapView(Context context, AttributeSet attrs) {
         MapView mapView = new MapView(context);
         addView(mapView);
-        final BaiduMap map = mapView.getMap();
-        map.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
+        mBaiduMap = mapView.getMap();
+        mBaiduMap.setOnMapClickListener(new BaiduMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                showLog("===>>>onMapClick "+latLng);
+                showLog("===>>>onMapClick " + latLng);
             }
 
             @Override
@@ -65,25 +68,31 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
                 return false;
             }
         });
-        map.setOnMapStatusChangeListener(new BaiduMap.OnMapStatusChangeListener() {
+        mBaiduMap.setOnMapStatusChangeListener(new BaiduMap.OnMapStatusChangeListener() {
             @Override
             public void onMapStatusChangeStart(MapStatus mapStatus) {
-
+                showLog("===>>>onMapStatusChangeStart, " + mapStatus.zoom);
             }
 
             @Override
-            public void onMapStatusChangeStart(MapStatus mapStatus, int i) {
-
+            public void onMapStatusChangeStart(MapStatus mapStatus, int reason) {
+                showLog("===>>>onMapStatusChangeStart, " + mapStatus.zoom + ", " + reason + BaiduMap.OnMapStatusChangeListener.REASON_GESTURE);
+                if (BaiduMap.OnMapStatusChangeListener.REASON_GESTURE == reason) {
+                    mMapFloatingLayerView.mapStatusChangeStart(mBaiduMap);
+                }
             }
 
             @Override
             public void onMapStatusChange(MapStatus mapStatus) {
-
+                showLog("===>>>onMapStatusChange, " + mapStatus.zoom);
+                mMapFloatingLayerView.mapStatusChange(mBaiduMap);
             }
 
             @Override
             public void onMapStatusChangeFinish(MapStatus mapStatus) {
-//                map.getProjection().toScreenLocation()
+                //                map.getProjection().toScreenLocation()
+                showLog("===>>>onMapStatusChangeFinish, " + mapStatus.zoom);
+                mMapFloatingLayerView.mapStatusChangeEnd(mBaiduMap);
             }
         });
     }
@@ -92,6 +101,7 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
         mMapFloatingLayerView = new MapFloatingLayerView(context, attrs);
         addView(mMapFloatingLayerView);
         mMapFloatingLayerView.setOnLayerClickListener(this);
+        mMapFloatingLayerView.setMap(mBaiduMap);
     }
 
     private void showLog(String message) {
@@ -105,14 +115,14 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
 
     @Override
     public boolean onLayerDragClick(float dx, float dy) {
-//        MarginLayoutParams marginLayoutParams = (MarginLayoutParams) mMapFloatingLayerView.getLayoutParams();
-//        marginLayoutParams.leftMargin = (int) dx;
-//        marginLayoutParams.topMargin = (int) dy;
-//        mMapFloatingLayerView.setTranslationX(dx);
-//        mMapFloatingLayerView.setTranslationY(dy);
-//        mMapFloatingLayerView.setLayoutParams(marginLayoutParams);
+        //        MarginLayoutParams marginLayoutParams = (MarginLayoutParams) mMapFloatingLayerView.getLayoutParams();
+        //        marginLayoutParams.leftMargin = (int) dx;
+        //        marginLayoutParams.topMargin = (int) dy;
+        //        mMapFloatingLayerView.setTranslationX(dx);
+        //        mMapFloatingLayerView.setTranslationY(dy);
+        //        mMapFloatingLayerView.setLayoutParams(marginLayoutParams);
 
-//        setPadding((int)dx, (int) dy, 0, 0);
+        //        setPadding((int)dx, (int) dy, 0, 0);
         return false;
     }
 

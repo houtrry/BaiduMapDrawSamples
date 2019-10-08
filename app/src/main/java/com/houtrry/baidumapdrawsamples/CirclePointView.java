@@ -30,6 +30,7 @@ public class CirclePointView {
 
     private int centerRadius = 0;
     private Integer centerColor = null;
+    private boolean isLineCenterPoint = false;
 
     public PointF getPoint() {
         return point;
@@ -37,6 +38,11 @@ public class CirclePointView {
 
     public void setPoint(PointF point) {
         this.point = point;
+    }
+
+    public void setPoint(float x, float y) {
+        this.point.x = x;
+        this.point.y = y;
     }
 
     public LatLng getLatLng() {
@@ -137,6 +143,26 @@ public class CirclePointView {
         }
     }
 
+    public void setStokeColor(Integer stokeColor) {
+        this.stokeColor = stokeColor;
+    }
+
+    public void setSolidColor(Integer solidColor) {
+        this.solidColor = solidColor;
+    }
+
+    public void setCenterColor(Integer centerColor) {
+        this.centerColor = centerColor;
+    }
+
+    public boolean isLineCenterPoint() {
+        return isLineCenterPoint;
+    }
+
+    public void setLineCenterPoint(boolean lineCenterPoint) {
+        isLineCenterPoint = lineCenterPoint;
+    }
+
     @Override
     public String toString() {
         return "CirclePointView{" +
@@ -146,7 +172,12 @@ public class CirclePointView {
                 ", stokeWidth=" + stokeWidth +
                 ", stokeColor=" + stokeColor +
                 ", solidColor=" + solidColor +
+                ", fixX=" + fixX +
+                ", fixY=" + fixY +
                 ", touchRatio=" + touchRatio +
+                ", centerRadius=" + centerRadius +
+                ", centerColor=" + centerColor +
+                ", isLineCenterPoint=" + isLineCenterPoint +
                 '}';
     }
 
@@ -158,4 +189,18 @@ public class CirclePointView {
         point.x += dx;
         point.y += dy;
     }
+
+    public void recalculatePointByLatLng(boolean needRecalculateLatLngFirst) {
+        if (needRecalculateLatLngFirst) {
+            recalculateLatLngByPoint();
+        }
+
+
+    }
+
+    public void recalculateLatLngByPoint() {
+
+    }
+
+
 }

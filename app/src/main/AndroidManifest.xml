@@ -1,34 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.houtrry.baidumapdrawsamples">
-
+    package="com.houtrry.baidumapdrawsamples"
+    android:versionCode="1"
+    android:versionName="1.0">
 
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
         android:normalScreens="false"
         android:resizeable="true"
-        android:smallScreens="true" />
-    <!-- 读取外置存储。如果开发者使用了So动态加载功能并且把SO文件放在了外置存储区域，则需要申请该权限，否则不需要 -->
+        android:smallScreens="true" /> <!-- 读取外置存储。如果开发者使用了So动态加载功能并且把SO文件放在了外置存储区域，则需要申请该权限，否则不需要 -->
     <uses-feature
         android:glEsVersion="0x00020000"
-        android:required="true" />
-    <!-- 写外置存储。如果开发者使用了离线地图，并且数据写在外置存储区域，则需要申请该权限 -->
-    <uses-feature android:name="android.hardware.camera" />
-    <!-- 以下两个权限用于Demo中定位功能展示，如果开发者实际不需要百度定位功能，可不申请 -->
+        android:required="true" /> <!-- 写外置存储。如果开发者使用了离线地图，并且数据写在外置存储区域，则需要申请该权限 -->
+    <uses-feature android:name="android.hardware.camera" /> <!-- 以下两个权限用于Demo中定位功能展示，如果开发者实际不需要百度定位功能，可不申请 -->
     <!-- 这个权限用于进行网络定位 -->
-    <uses-feature android:name="android.hardware.camera.autofocus" />
-    <!-- 这个权限用于访问GPS定位 -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 调用相机，用于实现扫描二维码，预览个性化地图编辑器生成的个性化地图样式，开发者实际开发中地图SDK不需要该权限 -->
+    <uses-feature android:name="android.hardware.camera.autofocus" /> <!-- 这个权限用于访问GPS定位 -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 调用相机，用于实现扫描二维码，预览个性化地图编辑器生成的个性化地图样式，开发者实际开发中地图SDK不需要该权限 -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- OpenGLES 2.0 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- 用于实现扫描二维码，预览个性化地图编辑器生成的个性化地图样式（开发者实际开发中地图SDK不需要该权限） -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- OpenGLES 2.0 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- 用于实现扫描二维码，预览个性化地图编辑器生成的个性化地图样式（开发者实际开发中地图SDK不需要该权限） -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:allowBackup="true"
