@@ -92,20 +92,20 @@ public class MapFloatingLayerView extends View {
         drawCirclePoint(canvas);
     }
 
-    private CirclePointView mStartPointView = null;
-    private CirclePointView mEndPointView = null;
+    private CirclePoint mStartPointView = null;
+    private CirclePoint mEndPointView = null;
     private int mCirclePointViewSize = 0;
 
     private void drawLine(Canvas canvas) {
-        mCirclePointViewSize = mCirclePointViews.size();
+        mCirclePointViewSize = mCirclePoints.size();
         for (int i = 0; i < mCirclePointViewSize - 1; i++) {
-            mStartPointView = mCirclePointViews.get(i);
-            mEndPointView = mCirclePointViews.get(i + 1);
+            mStartPointView = mCirclePoints.get(i);
+            mEndPointView = mCirclePoints.get(i + 1);
             canvas.drawLine(mStartPointView.getPoint().x, mStartPointView.getPoint().y, mEndPointView.getPoint().x, mEndPointView.getPoint().y, mLinePaint);
         }
         if (isClosedLine && mCirclePointViewSize > 2) {
-            mStartPointView = mCirclePointViews.get(mCirclePointViewSize - 1);
-            mEndPointView = mCirclePointViews.get(0);
+            mStartPointView = mCirclePoints.get(mCirclePointViewSize - 1);
+            mEndPointView = mCirclePoints.get(0);
             canvas.drawLine(mStartPointView.getPoint().x, mStartPointView.getPoint().y, mEndPointView.getPoint().x, mEndPointView.getPoint().y, mLinePaint);
         }
     }
@@ -114,16 +114,16 @@ public class MapFloatingLayerView extends View {
     private PointF mPointF;
 
     private void drawLinePath(Canvas canvas) {
-        mCirclePointViewSize = mCirclePointViews.size();
+        mCirclePointViewSize = mCirclePoints.size();
         if (mCirclePointViewSize < 2) {
 
             return;
         }
         mLinePath.reset();
-        mPointF = mCirclePointViews.get(0).getPoint();
+        mPointF = mCirclePoints.get(0).getPoint();
         mLinePath.moveTo(mPointF.x, mPointF.y);
         for (int i = 1; i < mCirclePointViewSize; i++) {
-            mPointF = mCirclePointViews.get(i).getPoint();
+            mPointF = mCirclePoints.get(i).getPoint();
             mLinePath.lineTo(mPointF.x, mPointF.y);
         }
         if (isClosedLine && mCirclePointViewSize > 2) {
@@ -133,8 +133,8 @@ public class MapFloatingLayerView extends View {
     }
 
     private void drawCirclePoint(Canvas canvas) {
-        for (CirclePointView circlePointView : mCirclePointViews) {
-            circlePointView.draw(canvas, mPaint);
+        for (CirclePoint circlePoint : mCirclePoints) {
+            circlePoint.draw(canvas, mPaint);
         }
     }
 
@@ -156,12 +156,12 @@ public class MapFloatingLayerView extends View {
             return;
         }
         Point point = new Point();
-        for (CirclePointView circlePointView : mCirclePointViews) {
-            PointF pointF = circlePointView.getPoint();
+        for (CirclePoint circlePoint : mCirclePoints) {
+            PointF pointF = circlePoint.getPoint();
             point.x = (int) (pointF.x + 0.5f);
             point.y = (int) (pointF.y + 0.5f);
             LatLng latLng = projection.fromScreenLocation(point);
-            circlePointView.setLatLng(latLng);
+            circlePoint.setLatLng(latLng);
         }
     }
 
@@ -176,17 +176,17 @@ public class MapFloatingLayerView extends View {
         }
         Point point = new Point();
         LatLng latLng = null;
-        for (CirclePointView circlePointView : mCirclePointViews) {
-            latLng = circlePointView.getLatLng();
+        for (CirclePoint circlePoint : mCirclePoints) {
+            latLng = circlePoint.getLatLng();
             if (latLng == null) {
-                PointF pointF = circlePointView.getPoint();
+                PointF pointF = circlePoint.getPoint();
                 point.x = (int) (pointF.x + 0.5f);
                 point.y = (int) (pointF.y + 0.5f);
                 latLng = projection.fromScreenLocation(point);
-                circlePointView.setLatLng(latLng);
+                circlePoint.setLatLng(latLng);
             }
             Point newPoint = projection.toScreenLocation(latLng);
-            circlePointView.setPoint(newPoint.x, newPoint.y);
+            circlePoint.setPoint(newPoint.x, newPoint.y);
         }
         ViewCompat.postInvalidateOnAnimation(this);
     }
@@ -206,8 +206,6 @@ public class MapFloatingLayerView extends View {
     private float mCurrentX = 0;
     private float mCurrentY = 0;
 
-    private Float mFixX = null;
-    private Float mFixY = null;
 
     public boolean handleTouchEvent(MotionEvent event) {
         showLog("===>>>handleTouchEvent, event: " + event);
@@ -218,20 +216,16 @@ public class MapFloatingLayerView extends View {
                 hasTouchDrag = false;
                 mDragStartX = event.getX();
                 mDragStartY = event.getY();
-                if (mFixX == null) {
-                    mFixX = mDragStartX - event.getX();
-                    mFixY = mDragStartY - event.getY();
-                }
                 int targetCirclePointViewPosition = findTargetCirclePointViewPosition(mCurrentX, mCurrentY);
-                showLog("===>>>preformPointDrag,,, targetCirclePointViewPosition: "+targetCirclePointViewPosition);
+                showLog("===>>>preformPointDrag,,, targetCirclePointViewPosition: " + targetCirclePointViewPosition);
                 if (targetCirclePointViewPosition >= 0) {
-                    needIntercept =  true;
+                    needIntercept = true;
                 }
                 isFirstMove = true;
                 break;
             case MotionEvent.ACTION_MOVE:
                 hasTouchDrag = true;
-                if (enableDrag && mCirclePointViews.size() > 0) {
+                if (enableDrag && mCirclePoints.size() > 0) {
                     preformDrag(event);
                 }
                 break;
@@ -245,7 +239,6 @@ public class MapFloatingLayerView extends View {
                 break;
             default:
                 break;
-
         }
         return needIntercept;
     }
@@ -257,7 +250,7 @@ public class MapFloatingLayerView extends View {
         showLog("===>>>preformDrag, targetCirclePointViewPosition: " + targetCirclePointViewPosition);
         if (targetCirclePointViewPosition < 0) {
             showLog("===>>>preformDrag, no targetCirclePointView in list");
-//            preformOuterDrag();
+            //            preformOuterDrag();
             return;
         }
         preformPointDrag(targetCirclePointViewPosition);
@@ -270,7 +263,7 @@ public class MapFloatingLayerView extends View {
         if (mOnLayerClickListener != null && mOnLayerClickListener.onLayerDragClick(dx, dy)) {
             return;
         }
-        for (CirclePointView view : mCirclePointViews) {
+        for (CirclePoint view : mCirclePoints) {
             view.fixPosition(dx, dy);
         }
         ViewCompat.postInvalidateOnAnimation(this);
@@ -282,9 +275,7 @@ public class MapFloatingLayerView extends View {
     private boolean isFirstMove = false;
 
     private void preformPointDrag(int targetCirclePointViewPosition) {
-        showLog("===>>>preformPointDrag: "+targetCirclePointViewPosition);
-
-        // TODO: 2019/10/8 根据位置映射坐标经纬度
+        showLog("===>>>preformPointDrag: " + targetCirclePointViewPosition);
         if (mBaiduMap == null) {
             return;
         }
@@ -294,55 +285,65 @@ public class MapFloatingLayerView extends View {
         }
         final int x = (int) (mCurrentX + 0.5f);
         final int y = (int) (mCurrentY + 0.5f);
-        CirclePointView circlePointView = mCirclePointViews.get(targetCirclePointViewPosition);
-        circlePointView.setLatLng(projection.fromScreenLocation(new Point(x, y)));
-        circlePointView.setPoint(x, y);
+        CirclePoint circlePoint = mCirclePoints.get(targetCirclePointViewPosition);
+        circlePoint.setLatLng(projection.fromScreenLocation(new Point(x, y)));
+        circlePoint.setPoint(x, y);
 
-        showLog("===>>>preformPointDrag, isFirstMove: "+isFirstMove+", "+circlePointView.isLineCenterPoint());
-        if (isFirstMove) {
-            if (circlePointView.isLineCenterPoint()) {
-                circlePointView.setLineCenterPoint(true);
-                mCirclePointViews.set(targetCirclePointViewPosition, circlePointView);
-                mCirclePointViews.add(targetCirclePointViewPosition + 1, getCenterCirclePoint(mCirclePointViews.get(targetCirclePointViewPosition + 1), x, y));
-                mCirclePointViews.add(targetCirclePointViewPosition, getCenterCirclePoint(mCirclePointViews.get(targetCirclePointViewPosition - 1), x, y));
-            } else {
+        showLog("===>>>preformPointDrag, isFirstMove: " + isFirstMove + ", " + circlePoint.isLineCenterPoint() + ", " + targetCirclePointViewPosition + "/" + mCirclePoints.size());
+        if (isFirstMove && circlePoint.isLineCenterPoint()) {
+            CirclePoint mainCirclePoint = getMainCirclePoint(circlePoint.getPoint().x, circlePoint.getPoint().y);
+            mainCirclePoint.setLatLng(circlePoint.getLatLng());
+            mCirclePoints.set(targetCirclePointViewPosition, mainCirclePoint);
+            mCirclePoints.add(targetCirclePointViewPosition + 1, getCenterCirclePoint(mCirclePoints.get(targetCirclePointViewPosition + 1), x, y));
+            mCirclePoints.add(targetCirclePointViewPosition, getCenterCirclePoint(mCirclePoints.get(targetCirclePointViewPosition - 1), x, y));
 
-            }
-
-
-            isFirstMove = false;
+            showLog("===>>>preformPointDrag, add 2 center point");
+        } else {
+            showLog("===>>>preformPointDrag, update last and next point");
+            updateLastAndNextPointPosition(targetCirclePointViewPosition, circlePoint);
         }
+        isFirstMove = false;
         ViewCompat.postInvalidateOnAnimation(this);
     }
 
-    private CirclePointView getCenterCirclePoint(CirclePointView pointView, float x, float y) {
+    private void updateLastAndNextPointPosition(int targetCirclePointViewPosition, CirclePoint circlePoint) {
+        if (targetCirclePointViewPosition > 1) {
+            CirclePoint lastMainPoint = mCirclePoints.get(targetCirclePointViewPosition - 2);
+            CirclePoint lastCenterPoint = mCirclePoints.get(targetCirclePointViewPosition - 1);
+            lastCenterPoint.setPoint((lastMainPoint.getPoint().x + circlePoint.getPoint().x) * 0.5f, (lastMainPoint.getPoint().y + circlePoint.getPoint().y) * 0.5f);
+        }
+
+        if (targetCirclePointViewPosition < mCirclePoints.size() - 2) {
+            CirclePoint nextMainPoint = mCirclePoints.get(targetCirclePointViewPosition + 2);
+            CirclePoint nextCenterPoint = mCirclePoints.get(targetCirclePointViewPosition + 1);
+            nextCenterPoint.setPoint((nextMainPoint.getPoint().x + circlePoint.getPoint().x) * 0.5f, (nextMainPoint.getPoint().y + circlePoint.getPoint().y) * 0.5f);
+        }
+    }
+
+    private CirclePoint getCenterCirclePoint(CirclePoint pointView, float x, float y) {
         PointF point = new PointF((x + pointView.getPoint().x) * 0.5f, (y + pointView.getPoint().y) * 0.5f);
-        CirclePointView centerPoint = new CirclePointView();
+        CirclePoint centerPoint = new CirclePoint();
         centerPoint.setPoint(point);
         centerPoint.setRadius(mLineCenterPointRadius);
-        centerPoint.setFixX(mFixX);
-        centerPoint.setFixY(mFixY);
         centerPoint.setLineCenterPoint(true);
         centerPoint.setSolidColor(mLineCenterPointColor);
         centerPoint.setTouchRatio(mLineCenterPointRatio);
         return centerPoint;
     }
 
-    private CirclePointView getMainCirclePoint(float x, float y) {
-        CirclePointView circlePointView = new CirclePointView();
-        circlePointView.setPoint(new PointF(x, y));
-        circlePointView.setRadius(mRadius);
-        circlePointView.setFixX(mFixX);
-        circlePointView.setFixY(mFixY);
-        circlePointView.setLineCenterPoint(false);
-        circlePointView.setSolidColor(mSolidColor);
-        circlePointView.setTouchRatio(mTouchRatio);
-        circlePointView.setStokeColor(mStokeColor);
-        circlePointView.setStokeWidth(mStokeWidth);
-        return circlePointView;
+    private CirclePoint getMainCirclePoint(float x, float y) {
+        CirclePoint circlePoint = new CirclePoint();
+        circlePoint.setPoint(new PointF(x, y));
+        circlePoint.setRadius(mRadius);
+        circlePoint.setLineCenterPoint(false);
+        circlePoint.setSolidColor(mSolidColor);
+        circlePoint.setTouchRatio(mTouchRatio);
+        circlePoint.setStokeColor(mStokeColor);
+        circlePoint.setStokeWidth(mStokeWidth);
+        return circlePoint;
     }
 
-    private List<CirclePointView> mCirclePointViews = new ArrayList<>();
+    private List<CirclePoint> mCirclePoints = new ArrayList<>();
 
     private void preformClick(MotionEvent event) {
         showLog("===>>>preformClick");
@@ -352,7 +353,7 @@ public class MapFloatingLayerView extends View {
         int targetCirclePointViewPosition = findTargetCirclePointViewPosition(eventX, eventY);
         if (targetCirclePointViewPosition >= 0) {
             if (mOnLayerClickListener != null) {
-                mOnLayerClickListener.onPointClick(mCirclePointViews.get(targetCirclePointViewPosition));
+                mOnLayerClickListener.onPointClick(mCirclePoints.get(targetCirclePointViewPosition), targetCirclePointViewPosition);
             }
             return;
         }
@@ -360,17 +361,17 @@ public class MapFloatingLayerView extends View {
             mOnLayerClickListener.onLayerClick(new PointF(eventX, eventY));
         }
 
-        if (mCirclePointViews.size() > 0) {
-            mCirclePointViews.add(getCenterCirclePoint(mCirclePointViews.get(mCirclePointViews.size() - 1), eventX, eventY));
+        if (mCirclePoints.size() > 0) {
+            mCirclePoints.add(getCenterCirclePoint(mCirclePoints.get(mCirclePoints.size() - 1), eventX, eventY));
         }
-        mCirclePointViews.add(getMainCirclePoint(eventX, eventY));
+        mCirclePoints.add(getMainCirclePoint(eventX, eventY));
         ViewCompat.postInvalidateOnAnimation(this);
     }
 
     private int findTargetCirclePointViewPosition(float x, float y) {
         int position = -1;
-        for (int i = 0; i < mCirclePointViews.size(); i++) {
-            if (mCirclePointViews.get(i).isTargetView(x, y)) {
+        for (int i = 0; i < mCirclePoints.size(); i++) {
+            if (mCirclePoints.get(i).isTargetView(x, y)) {
                 position = i;
                 break;
             }
@@ -388,11 +389,40 @@ public class MapFloatingLayerView extends View {
         mBaiduMap = baiduMap;
     }
 
+    private List<LineOverlay> mLineOverlays = new ArrayList<>();
+    private List<PolygonOverlay> mPolygonOverlays = new ArrayList<>();
+
+    public void drawLine(List<LatLng> list, List<PointF> pointList, int lineColor, int lineWidth, boolean isClosedLine) {
+        LineOverlay lineOverlay = new LineOverlay();
+        lineOverlay.setList(list);
+        lineOverlay.setPointList(pointList);
+        lineOverlay.setLineColor(lineColor);
+        lineOverlay.setLineWidth(lineWidth);
+        lineOverlay.setClosedLine(isClosedLine);
+        mLineOverlays.add(lineOverlay);
+    }
+
+    public void drawPolygon(List<LatLng> list, List<PointF> pointList, int color) {
+        PolygonOverlay polygonOverlay = new PolygonOverlay();
+        polygonOverlay.setList(list);
+        polygonOverlay.setPointList(pointList);
+        polygonOverlay.setColor(color);
+        mPolygonOverlays.add(polygonOverlay);
+    }
+
+    public void clear() {
+        mLineOverlays.clear();
+        mPolygonOverlays.clear();
+        mCirclePoints.clear();
+        ViewCompat.postInvalidateOnAnimation(this);
+    }
+
     public interface OnLayerClickListener {
+
         void onLayerClick(PointF point);
 
         boolean onLayerDragClick(float dx, float dy);
 
-        void onPointClick(CirclePointView circlePointView);
+        void onPointClick(CirclePoint circlePoint, int position);
     }
 }

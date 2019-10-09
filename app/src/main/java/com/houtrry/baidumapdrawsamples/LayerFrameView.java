@@ -13,16 +13,18 @@ import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.model.LatLng;
 
+import java.util.List;
+
 /**
  * @author: houtrry
  * @date: 2019/9/29 15:55
  * @version: $
  * @description:
  */
-public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.OnLayerClickListener {
+public class LayerFrameView extends FrameLayout implements OnLayerClickListener {
 
     private static final String TAG = "LayerFrameView";
-    private MapFloatingLayerView mMapFloatingLayerView;
+    private MapFloatingLayerView1 mMapFloatingLayerView;
     private BaiduMap mBaiduMap;
 
     public LayerFrameView(Context context) {
@@ -40,7 +42,7 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        showLog("===>>>dispatchTouchEvent: "+ev);
+        showLog("===>>>dispatchTouchEvent: " + ev);
         boolean result = false;
         if (mMapFloatingLayerView != null) {
             result = mMapFloatingLayerView.handleTouchEvent(ev);
@@ -98,7 +100,7 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
     }
 
     private void initMapFloatingLayerView(Context context, AttributeSet attrs) {
-        mMapFloatingLayerView = new MapFloatingLayerView(context, attrs);
+        mMapFloatingLayerView = new MapFloatingLayerView1(context, attrs);
         addView(mMapFloatingLayerView);
         mMapFloatingLayerView.setOnLayerClickListener(this);
         mMapFloatingLayerView.setMap(mBaiduMap);
@@ -109,8 +111,8 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
     }
 
     @Override
-    public void onLayerClick(PointF point) {
-
+    public void onLayerClick(PointF point, LatLng latLng) {
+        showLog("===>>>onLayerClick,,, point: " + point + ", " + latLng);
     }
 
     @Override
@@ -127,7 +129,51 @@ public class LayerFrameView extends FrameLayout implements MapFloatingLayerView.
     }
 
     @Override
-    public void onPointClick(CirclePointView circlePointView) {
+    public void onPointClick(CirclePointOverlay circlePoint, int position) {
+        showLog("===>>>onPointClick, position: " + position + ", " + circlePoint);
+    }
 
+    public void setOnPointDragListener(OnPointDragListener onPointDragListener) {
+        if (mMapFloatingLayerView != null) {
+            mMapFloatingLayerView.setOnPointDragListener(onPointDragListener);
+        }
+    }
+
+    public void setOnLayerClickListener(OnLayerClickListener onLayerClickListener) {
+        if (mMapFloatingLayerView != null) {
+            mMapFloatingLayerView.setOnLayerClickListener(onLayerClickListener);
+        }
+    }
+
+    public LineOverlay drawLine(List<LatLng> list, List<PointF> pointList, int lineColor, int lineWidth, boolean isClosedLine) {
+        return mMapFloatingLayerView == null ? null : mMapFloatingLayerView.drawLine(list, pointList, lineColor, lineWidth, isClosedLine);
+    }
+
+    public PolygonOverlay drawPolygon(List<LatLng> list, List<PointF> pointList, int color) {
+        return mMapFloatingLayerView == null ? null : mMapFloatingLayerView.drawPolygon(list, pointList, color);
+    }
+
+    public CirclePointOverlay drawCirclePoint(LatLng latLng, PointF point, float radius, float stokeWidth, Integer stokeColor,
+                                              Integer solidColor, float touchRatio, float centerRadius,
+                                              Integer centerColor, boolean isLineCenterPoint, boolean enableDrag) {
+        return mMapFloatingLayerView == null ? null : mMapFloatingLayerView.drawCirclePoint(latLng, point, radius, stokeWidth, stokeColor, solidColor, touchRatio, centerRadius, centerColor, isLineCenterPoint, enableDrag);
+    }
+
+    public void clear() {
+        if (mMapFloatingLayerView != null) {
+            mMapFloatingLayerView.clear();
+        }
+    }
+
+    public void forceRefresh() {
+        if (mMapFloatingLayerView != null) {
+            mMapFloatingLayerView.forceRefresh();
+        }
+    }
+
+    public void forceRefreshTargetPosition() {
+        if (mMapFloatingLayerView != null) {
+            mMapFloatingLayerView.forceRefreshTargetPosition();
+        }
     }
 }
