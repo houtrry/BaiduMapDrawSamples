@@ -1,10 +1,10 @@
 package com.houtrry.baidumapdrawsamples;
 
 import android.graphics.Color;
-import android.graphics.PointF;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.model.LatLng;
 
 import java.util.ArrayList;
@@ -12,99 +12,135 @@ import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity implements OnLayerClickListener, OnPointDragListener {
+public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "Layer2Activity";
 
-    private static final String TAG = "LayerActivity";
-
-    private boolean isDrawBaseLand = true;
     private LayerFrameView mLayerFrameView;
-    private List<PointF> mPointFList = new ArrayList<>();
+
     private List<LatLng> mLatLngs = new ArrayList<>();
-    private List<CirclePointOverlay> mCirclePointOverlays = new ArrayList<>();
-    private boolean needClose = false;
+    private Polyline mPolyline;
+    private boolean needClosedLine = false;
+    private List<AnnulusOverlay> mAnnulusOverlays = new ArrayList<>();
+
+    private static final int BORDER_WIDTH_MAIN = 5;
+    private static final int BORDER_WIDTH_CENTER = 4;
+    private static final int BORDER_COLOR_MAIN = Color.RED;
+    private static final int BORDER_COLOR_CENTER = Color.BLACK;
+    private static final int OUTER_RADIUS_MAIN = 25;
+    private static final int OUTER_RADIUS_CENTER = 20;
+    private static final int SOLID_COLOR_MAIN = Color.WHITE;
+    private static final int SOLID_COLOR_CENTER = Color.WHITE;
+    private static final int CENTER_COLOR_MAIN = Color.BLUE;
+    private static final int CENTER_COLOR_CENTER = Color.RED;
+    private static final int CENTER_RADIUS_MAIN = 15;
+    private static final int CENTER_RADIUS_CENTER = 12;
+    private static final int TOUCH_RATIO_MAIN = 3;
+    private static final int TOUCH_RATIO_CENTER = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mLayerFrameView = findViewById(R.id.lfv);
-        mLayerFrameView.setOnLayerClickListener(this);
-        mLayerFrameView.setOnPointDragListener(this);
+
+        mLayerFrameView.setOnMapClickListener(new OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if (mLatLngs.size() > 0) {
+                    addNode(getCenterLatLng(mLatLngs.get(mLatLngs.size() - 1), latLng), false);
+                }
+                mLatLngs.add(latLng);
+                addNode(latLng, true);
+                refreshLine();
+            }
+        });
+        mLayerFrameView.setOnMarkerClickListener(new OnMarkerClickListener() {
+            @Override
+            public void onMarkerClick(LatLng latLng, int position) {
+                showLog("===>>>onMarkerClick, position: " + position + ", latLng: " + latLng);
+                if (position == 0 && mLatLngs != null && mLatLngs.size() > 2 && !needClosedLine) {
+                    needClosedLine = true;
+                    addNode(getCenterLatLng(mLatLngs.get(mLatLngs.size() - 1), latLng), false);
+                    refreshLine();
+                }
+            }
+        });
+        mLayerFrameView.setOnMarkerDragListener(new OnMarkerDragListener() {
+            @Override
+            public void onMarkerDragStart(LatLng latLng, int position) {
+                showLog("===>>>onMarkerDragStart, position: " + position + ", latLng: " + latLng);
+
+                if (isMainNode(latLng, position)) {
+
+                } else {
+                    AnnulusOverlay annulusOverlay = mAnnulusOverlays.get(position);
+                    annulusOverlay.updateProperty(BORDER_WIDTH_MAIN, BORDER_COLOR_MAIN, OUTER_RADIUS_MAIN, SOLID_COLOR_MAIN, CENTER_COLOR_MAIN, CENTER_RADIUS_MAIN, TOUCH_RATIO_MAIN, true);
+
+                    int lastMainPosition = position / 2;
+                    showLog("===>>>onMarkerDragStart, lastMainPosition: " + lastMainPosition);
+                    addNode(getCenterLatLng(latLng, mLatLngs.get(lastMainPosition)), false, position);
+                    if (lastMainPosition < mLatLngs.size()-1) {
+                        addNode(getCenterLatLng(latLng, mLatLngs.get(lastMainPosition + 1)), false, position + 2);
+                    } else {
+                        addNode(getCenterLatLng(latLng, mLatLngs.get(0)), false, position + 2);
+                    }
+                    mLatLngs.add(lastMainPosition + 1, latLng);
+                    mLayerFrameView.forceRefreshPosition();
+                }
+            }
+
+            @Override
+            public void onMarkerDragging(LatLng latLng, int position) {
+                showLog("===>>>onMarkerDragging, position: " + position + ", latLng: " + latLng);
+                if (isMainNode(latLng, position)) {
+                    mLatLngs.set(position / 2, latLng);
+                    if (position > 0) {
+                        mAnnulusOverlays.get(position - 1).updatePosition(getCenterLatLng(mLatLngs.get(position / 2 - 1), latLng));
+                    } else if (position == 0 && needClosedLine) {
+                        mAnnulusOverlays.get(mAnnulusOverlays.size() - 1).updatePosition(getCenterLatLng(mLatLngs.get(mLatLngs.size() - 1), latLng));
+                    }
+                    if (position / 2 < mLatLngs.size() - 1) {
+                        mAnnulusOverlays.get(position + 1).updatePosition(getCenterLatLng(mLatLngs.get(position / 2 + 1), latLng));
+                    } else if (position / 2 == mLatLngs.size() - 1 && mAnnulusOverlays.size() > position + 1) {
+                        mAnnulusOverlays.get(position + 1).updatePosition(getCenterLatLng(mLatLngs.get(0), latLng));
+                    }
+                }
+                refreshLine();
+            }
+
+            @Override
+            public void onMarkerDragEnd(LatLng latLng, int position) {
+                if (isMainNode(latLng, position)) {
+                    mLatLngs.set(position / 2, latLng);
+                }
+                refreshLine();
+                showLog("===>>>onMarkerDragEnd, position: " + position + ", latLng: " + latLng);
+            }
+        });
     }
 
-    @Override
-    public void onLayerClick(PointF point, LatLng latLng) {
-        mPointFList.add(point);
-        mLatLngs.add(latLng);
-        refreshLineAndNode(true);
+    private LatLng getCenterLatLng(LatLng latLng, LatLng latLng1) {
+        return new LatLng((latLng.latitude + latLng1.latitude) * 0.5d, (latLng.longitude + latLng1.longitude) * 0.5d);
     }
 
-    @Override
-    public boolean onLayerDragClick(float dx, float dy) {
-        return false;
-    }
-
-    @Override
-    public void onPointClick(CirclePointOverlay circlePoint, int position) {
-        if (position != 0 || mLatLngs.size() < 3) {
+    private void refreshLine() {
+        if (mLatLngs == null || mLatLngs.size() < 2) {
             return;
         }
-        mLayerFrameView.clear();
-        mLayerFrameView.drawLine(mLatLngs, mPointFList, Color.parseColor("#FF0000"), 4, true);
-        needClose = true;
-        refreshNode(true);
-    }
-
-    @Override
-    public void onPointDragStart(CirclePointOverlay circlePointOverlay, int index) {
-        if (circlePointOverlay.isLineCenterPoint()) {
-            index = (index + 1) / 2;
-            mPointFList.add(index, circlePointOverlay.getPoint());
-            mLatLngs.add(index, circlePointOverlay.getLatLng());
-        }
-        refreshLineAndNode(false);
-        mLayerFrameView.forceRefreshTargetPosition();
-        mLayerFrameView.forceRefresh();
-        showLog("===>>>onPointDragStart, " + index + ", " + circlePointOverlay);
-    }
-
-    @Override
-    public void onPointDragging(CirclePointOverlay circlePointOverlay, int index) {
-        showLog("===>>>onPointDragging, " + index + ", " + circlePointOverlay);
-        index = index / 2;
-        mPointFList.set(index, circlePointOverlay.getPoint());
-        mLatLngs.set(index, circlePointOverlay.getLatLng());
-        refreshLineAndNode(true);
-    }
-
-    @Override
-    public void onPointDragEnd(CirclePointOverlay circlePointOverlay, int index) {
-        showLog("===>>>onPointDragEnd, " + index + ", " + circlePointOverlay);
-    }
-
-    private void refreshNode(boolean needForceRefresh) {
-        mCirclePointOverlays.clear();
-        int size = mLatLngs.size();
-        for (int i = 0; i < size; i++) {
-            mCirclePointOverlays.add(mLayerFrameView.drawCirclePoint(mLatLngs.get(i), mPointFList.get(i), 15, 4, Color.parseColor("#FF0000"), Color.RED,
-                    2, 10, Color.RED, false, true));
-            if (i < size - 1) {
-                mCirclePointOverlays.add(mLayerFrameView.drawCirclePoint(null, getCenterPointF(mPointFList.get(i), mPointFList.get(i + 1)), 15, 4, Color.parseColor("#FF0000"), Color.WHITE,
-                        2, 11, Color.WHITE, true, true));
+        List<LatLng> list = new ArrayList<>(mLatLngs);
+        if (needClosedLine) {
+            if (list.get(0).longitude != list.get(list.size() - 1).longitude || list.get(0).longitude != list.get(list.size() - 1).longitude) {
+                list.add(list.get(0));
             }
         }
-        if (needClose) {
-            mCirclePointOverlays.add(mLayerFrameView.drawCirclePoint(null, getCenterPointF(mPointFList.get(0), mPointFList.get(size - 1)), 15, 4, Color.parseColor("#FF0000"), Color.WHITE,
-                    2, 11, Color.WHITE, true, true));
+        showLog("===>>>refreshLine, list: " + list);
+        if (mPolyline == null) {
+            mPolyline = mLayerFrameView.addLineOverlay(list, Color.GREEN, 6, !needClosedLine);
+        } else {
+            mPolyline.setPoints(list);
+            mPolyline.setDottedLine(!needClosedLine);
         }
-        if (needForceRefresh) {
-            mLayerFrameView.forceRefresh();
-        }
-    }
-
-    private PointF getCenterPointF(PointF point1, PointF point2) {
-        return new PointF((point1.x + point2.x) * 0.5f, (point1.y + point2.y) * 0.5f);
     }
 
 
@@ -112,11 +148,19 @@ public class MainActivity extends AppCompatActivity implements OnLayerClickListe
         Log.d(TAG, message);
     }
 
-    private void refreshLineAndNode(boolean needForceRefresh) {
-        if (mLatLngs.size() > 1) {
-            mLayerFrameView.clear();
-            mLayerFrameView.drawLine(mLatLngs, mPointFList, Color.parseColor("#FF0000"), 4, needClose);
-        }
-        refreshNode(needForceRefresh);
+    private void addNode(LatLng latLng, boolean isMainNode) {
+        AnnulusOverlay.Builder builder = new AnnulusOverlay.Builder().outerRadius(isMainNode ? OUTER_RADIUS_MAIN : OUTER_RADIUS_CENTER).borderColor(isMainNode ? BORDER_COLOR_MAIN : BORDER_COLOR_CENTER).borderWidth(isMainNode ? BORDER_WIDTH_MAIN : BORDER_WIDTH_CENTER).solidColor(isMainNode?SOLID_COLOR_MAIN:SOLID_COLOR_CENTER)
+                .centerColor(isMainNode ? CENTER_COLOR_MAIN : CENTER_COLOR_CENTER).centerRadius(isMainNode ? CENTER_RADIUS_MAIN : CENTER_RADIUS_CENTER).latLng(latLng).enableDrag(true).touchRatio(isMainNode? TOUCH_RATIO_MAIN:TOUCH_RATIO_CENTER);
+        mAnnulusOverlays.add(mLayerFrameView.addAnnulusOverlay(builder));
+    }
+
+    private void addNode(LatLng latLng, boolean isMainNode, int position) {
+        AnnulusOverlay.Builder builder = new AnnulusOverlay.Builder().outerRadius(isMainNode ? OUTER_RADIUS_MAIN : OUTER_RADIUS_CENTER).borderColor(isMainNode ? BORDER_COLOR_MAIN : BORDER_COLOR_CENTER).borderWidth(isMainNode ? BORDER_WIDTH_MAIN : BORDER_WIDTH_CENTER).solidColor(isMainNode?SOLID_COLOR_MAIN:SOLID_COLOR_CENTER)
+                .centerColor(isMainNode ? CENTER_COLOR_MAIN : CENTER_COLOR_CENTER).centerRadius(isMainNode ? CENTER_RADIUS_MAIN : CENTER_RADIUS_CENTER).latLng(latLng).enableDrag(true).touchRatio(isMainNode? TOUCH_RATIO_MAIN:TOUCH_RATIO_CENTER);
+        mAnnulusOverlays.add(position, mLayerFrameView.addAnnulusOverlay(builder, position));
+    }
+
+    private boolean isMainNode(LatLng latLng, int position) {
+        return position % 2 == 0;
     }
 }
