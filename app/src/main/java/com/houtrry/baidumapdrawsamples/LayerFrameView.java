@@ -108,6 +108,7 @@ public class LayerFrameView extends FrameLayout {
     private int mDragStartY;
     private int mCurrentDragX;
     private int mCurrentDragY;
+    private boolean isCanDrag = false;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -122,8 +123,13 @@ public class LayerFrameView extends FrameLayout {
                 mTouchDownTime = System.currentTimeMillis();
                 mDragStartX = x;
                 mDragStartY = y;
+                isCanDrag = true;
                 break;
             case MotionEvent.ACTION_MOVE:
+                if (!isCanDrag) {
+                    break;
+                }
+                showLog("===>>>ACTION_MOVE, "+event.getActionIndex()+", "+event.findPointerIndex(event.getActionIndex()));
                 if (mTargetAnnulusOverlay >= 0 && mTargetAnnulusOverlay < mAnnulusOverlays.size()) {
                     LatLng latLng = fromScreenLocation(x, y);
                     if (latLng != null) {
@@ -132,8 +138,17 @@ public class LayerFrameView extends FrameLayout {
                     }
                 }
                 break;
+            case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                if (!isCanDrag) {
+                    break;
+                }
+                if (event.findPointerIndex(event.getActionIndex()) != 0) {
+                    showLog("===>>>ACTION_UP, 0");
+                    break;
+                }
+                isCanDrag = false;
                 if ((System.currentTimeMillis() - mTouchDownTime) < ViewConfiguration.getTapTimeout()
                         && Math.sqrt(Math.pow(x - mDragStartX, 2) + Math.pow(y - mDragStartY, 2)) < ViewConfiguration.get(getContext()).getScaledTouchSlop()) {
                     LatLng latLng = fromScreenLocation(x, y);

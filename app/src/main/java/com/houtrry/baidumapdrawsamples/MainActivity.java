@@ -111,10 +111,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onMarkerDragEnd(LatLng latLng, int position) {
-                if (isMainNode(latLng, position)) {
-                    mLatLngs.set(position / 2, latLng);
-                }
-                refreshLine();
+//                if (isMainNode(latLng, position)) {
+//                    mLatLngs.set(position / 2, latLng);
+//                }
+//                refreshLine();
                 showLog("===>>>onMarkerDragEnd, position: " + position + ", latLng: " + latLng);
             }
         });
